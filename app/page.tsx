@@ -16,7 +16,7 @@ export default function Home() {
   const [voices, setVoices] = useState<Voice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState('en-US-AriaNeural');
   const [rate, setRate] = useState('0%');
-  const [pitch, setPitch] = useState('0%');
+  const [pitch, setPitch] = useState('0');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const loadVoices = async () => {
@@ -48,7 +48,7 @@ export default function Home() {
           text,
           voice: selectedVoice,
           rate,
-          pitch,
+          pitch: parseInt(pitch),
         }),
       });
 
@@ -167,14 +167,14 @@ export default function Home() {
 
           <div className="form-group">
             <label htmlFor="pitch" className="label">
-              Pitch: {pitch}
+              Pitch: {pitch}Hz
             </label>
             <input
               type="range"
               id="pitch"
-              min="-50%"
-              max="50%"
-              step="10%"
+              min="-50"
+              max="50"
+              step="5"
               value={pitch}
               onChange={(e) => setPitch(e.target.value)}
               className="range"

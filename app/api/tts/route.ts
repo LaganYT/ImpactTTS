@@ -3,7 +3,7 @@ import { EdgeTTS } from '@andresaya/edge-tts';
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'en-US-AriaNeural', rate = '0%', pitch = '0%' } = await request.json();
+    const { text, voice = 'en-US-AriaNeural', rate = '0%', pitch = 0 } = await request.json();
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -21,10 +21,22 @@ export async function POST(request: NextRequest) {
 
     const tts = new EdgeTTS();
     
-    // Generate audio using the correct API
+    // Convert pitch number to proper format
+    const formatPitch = (pitchNum: number) => {
+      if (pitchNum === 0) return '0Hz';
+      return pitchNum > 0 ? `+${pitchNum}Hz` : `${pitchNum}Hz`;
+    };
+
+    const formatRate = (rateStr: string) => {
+      const num = parseInt(rateStr.replace('%', ''));
+      if (num === 0) return '0%';
+      return num > 0 ? `+${num}%` : `${num}%`;
+    };
+    
+    // Generate audio using the correct API with properly formatted parameters
     await tts.synthesize(text, voice, {
-      rate: rate,
-      pitch: pitch,
+      rate: formatRate(rate),
+      pitch: formatPitch(pitch),
     });
 
     // Get the audio as base64
@@ -38,7 +50,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('TTS Error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate speech' },
+      { error: `Failed to generate speech: ${error.message}` },
       { status: 500 }
     );
   }

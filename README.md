@@ -29,7 +29,7 @@ npm run dev
 
 1. Enter text in the textarea (up to 1000 characters)
 2. Select a voice from the dropdown
-3. Adjust speech rate and pitch using the sliders
+3. Adjust speech rate (percentage) and pitch (Hz) using the sliders
 4. Click "Generate Speech" to create the audio
 5. Use the audio controls to play/pause the generated speech
 6. Click "Download Audio" to save the MP3 file
