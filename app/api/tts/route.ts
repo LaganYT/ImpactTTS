@@ -22,11 +22,7 @@ export async function POST(request: NextRequest) {
     const edgeTTS = new EdgeTTS();
     
     // Generate audio buffer
-    const audioBuffer = await edgeTTS.synthesize(text, {
-      voice,
-      rate,
-      pitch,
-    });
+    const audioBuffer = await edgeTTS.synthesize(text, voice, rate, pitch);
 
     // Convert buffer to base64 for response
     const base64Audio = Buffer.from(audioBuffer).toString('base64');
