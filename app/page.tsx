@@ -23,17 +23,11 @@ export default function Home() {
 
   const base64ToBlob = (base64: string, mimeType: string) => {
     const byteChars = atob(base64);
-    const chunkSize = 1024;
-    const chunks: Uint8Array[] = [];
-    for (let i = 0; i < byteChars.length; i += chunkSize) {
-      const slice = byteChars.slice(i, i + chunkSize);
-      const byteNumbers = new Array(slice.length);
-      for (let j = 0; j < slice.length; j++) {
-        byteNumbers[j] = slice.charCodeAt(j);
-      }
-      chunks.push(new Uint8Array(byteNumbers));
+    const bytes = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      bytes[i] = byteChars.charCodeAt(i);
     }
-    return new Blob(chunks, { type: mimeType });
+    return new Blob([bytes.buffer], { type: mimeType });
   };
 
   const loadVoices = async () => {
