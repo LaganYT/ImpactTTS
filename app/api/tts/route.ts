@@ -49,8 +49,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('TTS Error:', error);
+    let errorMessage = 'Failed to generate speech';
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+    }
     return NextResponse.json(
-      { error: `Failed to generate speech: ${error.message}` },
+      { error: errorMessage },
       { status: 500 }
     );
   }
