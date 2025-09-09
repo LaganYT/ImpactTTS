@@ -12,7 +12,7 @@
     "next": "14.0.4",
     "react": "^18",
     "react-dom": "^18",
-    "@andresaya/edge-tts": "^1.0.0"
+    "@andresaya/edge-tts": "^1.4.0"
   },
   "devDependencies": {
     "typescript": "^5",

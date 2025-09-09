@@ -19,13 +19,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const edgeTTS = new EdgeTTS();
+    const tts = new EdgeTTS();
     
-    // Generate audio buffer
-    const audioBuffer = await edgeTTS.synthesize(text, voice, rate, pitch);
+    // Generate audio using the correct API
+    await tts.synthesize(text, voice, {
+      rate: rate,
+      pitch: pitch,
+    });
 
-    // Convert buffer to base64 for response
-    const base64Audio = Buffer.from(audioBuffer).toString('base64');
+    // Get the audio as base64
+    const base64Audio = tts.toBase64();
     
     return NextResponse.json({
       audio: base64Audio,
@@ -43,8 +46,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const edgeTTS = new EdgeTTS();
-    const voices = await edgeTTS.getVoices();
+    const tts = new EdgeTTS();
+    const voices = await tts.getVoices();
     
     return NextResponse.json({ voices });
   } catch (error) {

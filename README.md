@@ -9,7 +9,7 @@ A Next.js application that uses the @andresaya/edge-tts library to convert text 
 - Adjustable speech rate and pitch
 - Audio playback controls
 - Download generated audio as MP3 files
-- Modern, responsive UI with Tailwind CSS
+- Modern, responsive UI with custom CSS
 
 ## Getting Started
 
@@ -44,7 +44,7 @@ npm run dev
 - Next.js 14
 - React 18
 - TypeScript
-- Tailwind CSS
+- Custom CSS
 - @andresaya/edge-tts
 
 ## Voice Options
