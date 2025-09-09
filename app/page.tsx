@@ -13,11 +13,28 @@ export default function Home() {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [voices, setVoices] = useState<Voice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState('en-US-AriaNeural');
   const [rate, setRate] = useState('0%');
   const [pitch, setPitch] = useState('0');
   const audioRef = useRef<HTMLAudioElement>(null);
+  const previewRef = useRef<HTMLAudioElement>(null);
+
+  const base64ToBlob = (base64: string, mimeType: string) => {
+    const byteChars = atob(base64);
+    const chunkSize = 1024;
+    const chunks: Uint8Array[] = [];
+    for (let i = 0; i < byteChars.length; i += chunkSize) {
+      const slice = byteChars.slice(i, i + chunkSize);
+      const byteNumbers = new Array(slice.length);
+      for (let j = 0; j < slice.length; j++) {
+        byteNumbers[j] = slice.charCodeAt(j);
+      }
+      chunks.push(new Uint8Array(byteNumbers));
+    }
+    return new Blob(chunks, { type: mimeType });
+  };
 
   const loadVoices = async () => {
     try {
@@ -60,9 +77,7 @@ export default function Home() {
       }
 
       // Create audio URL from base64 data
-      const audioBlob = new Blob([Buffer.from(data.audio, 'base64')], {
-        type: data.mimeType,
-      });
+      const audioBlob = base64ToBlob(data.audio, data.mimeType);
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
 
@@ -71,6 +86,30 @@ export default function Home() {
       alert('Failed to generate speech');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const previewVoice = async () => {
+    try {
+      const params = new URLSearchParams({
+        voice: selectedVoice,
+        rate,
+        pitch: String(parseInt(pitch)),
+        text: 'This is a preview of the selected voice.'
+      });
+      const res = await fetch(`/api/tts/preview?${params.toString()}`);
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      const blob = base64ToBlob(data.audio, data.mimeType);
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setTimeout(() => previewRef.current?.play(), 50);
+    } catch (e) {
+      console.error('Preview error', e);
+      alert('Failed to generate preview');
     }
   };
 
@@ -116,11 +155,7 @@ export default function Home() {
             onChange={(e) => setText(e.target.value)}
             placeholder="Type your text here..."
             className="textarea"
-            maxLength={1000}
           />
-          <div className="char-count">
-            {text.length}/1000 characters
-          </div>
         </div>
 
         <div className="grid grid-cols-1 grid-cols-3">
@@ -182,14 +217,29 @@ export default function Home() {
           </div>
         </div>
 
-        <button
-          onClick={generateSpeech}
-          disabled={isLoading || !text.trim()}
-          className="btn btn-primary"
-        >
-          {isLoading ? 'Generating Speech...' : 'Generate Speech'}
-        </button>
+        <div className="actions">
+          <button
+            onClick={previewVoice}
+            className="btn btn-secondary"
+          >
+            Preview Voice
+          </button>
+          <button
+            onClick={generateSpeech}
+            disabled={isLoading || !text.trim()}
+            className="btn btn-primary"
+          >
+            {isLoading ? 'Generating Speech...' : 'Generate Full Speech'}
+          </button>
+        </div>
       </div>
+
+      {previewUrl && (
+        <div className="audio-section">
+          <h2 className="audio-title">Voice Preview</h2>
+          <audio ref={previewRef} src={previewUrl} controls className="audio-player" />
+        </div>
+      )}
 
       {audioUrl && (
         <div className="audio-section">

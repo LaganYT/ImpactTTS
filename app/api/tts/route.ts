@@ -12,12 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (text.length > 1000) {
-      return NextResponse.json(
-        { error: 'Text must be 1000 characters or less' },
-        { status: 400 }
-      );
-    }
+    // Character limit removed. We will prefer single-file synthesis with a streaming fallback.
 
     const tts = new EdgeTTS();
     
@@ -33,14 +28,58 @@ export async function POST(request: NextRequest) {
       return num > 0 ? `+${num}%` : `${num}%`;
     };
     
-    // Generate audio using the correct API with properly formatted parameters
-    await tts.synthesize(text, voice, {
-      rate: formatRate(rate),
-      pitch: formatPitch(pitch),
-    });
+    // Prefer single-file synthesis; fallback to streaming/chunked if needed
+    let base64Audio: string;
+    try {
+      await tts.synthesize(text, voice, {
+        rate: formatRate(rate),
+        pitch: formatPitch(pitch),
+      });
+      base64Audio = tts.toBase64();
+    } catch (singleErr) {
+      const collectStream = async (input: string) => {
+        const buffers: Buffer[] = [];
+        // @ts-ignore synthesizeStream may be available at runtime
+        for await (const chunk of (tts as any).synthesizeStream(input, voice, {
+          rate: formatRate(rate),
+          pitch: formatPitch(pitch),
+        })) {
+          buffers.push(Buffer.isBuffer(chunk) ? (chunk as Buffer) : Buffer.from(chunk as any));
+        }
+        return Buffer.concat(buffers);
+      };
 
-    // Get the audio as base64
-    const base64Audio = tts.toBase64();
+      const splitIntoChunks = (input: string, maxLen = 4000) => {
+        const parts: string[] = [];
+        let remaining = input;
+        while (remaining.length > maxLen) {
+          let idx = Math.max(
+            remaining.lastIndexOf('. ', maxLen),
+            remaining.lastIndexOf('! ', maxLen),
+            remaining.lastIndexOf('? ', maxLen),
+            remaining.lastIndexOf('\n', maxLen)
+          );
+          if (idx < 0 || idx < Math.floor(maxLen * 0.5)) idx = maxLen;
+          parts.push(remaining.slice(0, idx + 1));
+          remaining = remaining.slice(idx + 1);
+        }
+        if (remaining.trim()) parts.push(remaining);
+        return parts;
+      };
+
+      try {
+        const buf = await collectStream(text);
+        base64Audio = buf.toString('base64');
+      } catch (streamErr) {
+        const parts = splitIntoChunks(text);
+        const allBuffers: Buffer[] = [];
+        for (const part of parts) {
+          const partBuf = await collectStream(part);
+          allBuffers.push(partBuf);
+        }
+        base64Audio = Buffer.concat(allBuffers).toString('base64');
+      }
+    }
     
     return NextResponse.json({
       audio: base64Audio,
