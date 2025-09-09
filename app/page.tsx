@@ -164,12 +164,6 @@ export default function Home() {
               className="select"
               onFocus={loadVoices}
             >
-              <option value="en-US-AriaNeural">Aria (US Female)</option>
-              <option value="en-US-DavisNeural">Davis (US Male)</option>
-              <option value="en-US-JennyNeural">Jenny (US Female)</option>
-              <option value="en-US-GuyNeural">Guy (US Male)</option>
-              <option value="en-GB-SoniaNeural">Sonia (UK Female)</option>
-              <option value="en-GB-RyanNeural">Ryan (UK Male)</option>
               {voices.map((voice) => (
                 <option key={voice.ShortName} value={voice.ShortName}>
                   {voice.FriendlyName} ({voice.Locale})

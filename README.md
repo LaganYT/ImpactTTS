@@ -5,7 +5,6 @@ A Next.js application that uses the @andresaya/edge-tts library to convert text 
 ## Features
 
 - Convert text to speech using Microsoft Edge TTS voices
-- Multiple voice options (Aria, Davis, Jenny, Guy, Sonia, Ryan, and more)
 - Adjustable speech rate and pitch
 - Audio playback controls
 - Download generated audio as MP3 files
@@ -49,12 +48,4 @@ npm run dev
 
 ## Voice Options
 
-The app includes several built-in voices:
-- Aria (US Female) - Default
-- Davis (US Male)
-- Jenny (US Female)
-- Guy (US Male)
-- Sonia (UK Female)
-- Ryan (UK Male)
-
-Additional voices are loaded dynamically from the Edge TTS service.
+The app includes voices that are loaded dynamically from the Edge TTS service.
