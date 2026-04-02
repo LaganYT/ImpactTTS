@@ -25,12 +25,19 @@ export async function GET(request: NextRequest) {
       return num > 0 ? `+${num}%` : `${num}%`;
     };
 
-    await tts.synthesize(previewText, voice, {
+    const audioChunks: Buffer[] = [];
+    for await (const chunk of tts.synthesizeStream(previewText, voice, {
       rate: formatRate(rate),
       pitch: formatPitch(pitch),
-    });
+    })) {
+      audioChunks.push(Buffer.from(chunk));
+    }
 
-    const base64Audio = tts.toBase64();
+    if (audioChunks.length === 0) {
+      throw new Error("No audio data was generated");
+    }
+
+    const base64Audio = Buffer.concat(audioChunks).toString("base64");
     return NextResponse.json({ audio: base64Audio, mimeType: "audio/mpeg" });
   } catch (error) {
     console.error("Preview TTS Error:", error);
