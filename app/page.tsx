@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface Voice {
   ShortName: string;
@@ -15,6 +15,8 @@ export default function Home() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [voices, setVoices] = useState<Voice[]>([]);
+  const [languageFilter, setLanguageFilter] = useState<string>('');
+  const [countryFilter, setCountryFilter] = useState<string>('');
   const [selectedVoice, setSelectedVoice] = useState('en-US-AriaNeural');
   const [rate, setRate] = useState('0%');
   const [pitch, setPitch] = useState('0');
@@ -41,6 +43,35 @@ export default function Home() {
       console.error('Failed to load voices:', error);
     }
   };
+
+  const languages = Array.from(
+    new Set(voices.map((v) => (v.Locale || '').split('-')[0] || ''))
+  ).filter(Boolean).sort();
+
+  const countries = Array.from(
+    new Set(
+      voices.map((v) => {
+        const parts = (v.Locale || '').split('-');
+        return parts[1] || parts[0] || '';
+      })
+    )
+  ).filter(Boolean).sort();
+
+  const filteredVoices = voices.filter((v) => {
+    const parts = (v.Locale || '').split('-');
+    const lang = parts[0] || '';
+    const country = parts[1] || parts[0] || '';
+    if (languageFilter && languageFilter !== lang) return false;
+    if (countryFilter && countryFilter !== country) return false;
+    return true;
+  });
+
+  // Keep selectedVoice valid when filters change
+  useEffect(() => {
+    if (filteredVoices.length > 0 && !filteredVoices.find((f) => f.ShortName === selectedVoice)) {
+      setSelectedVoice(filteredVoices[0].ShortName);
+    }
+  }, [filteredVoices, selectedVoice]);
 
   const generateSpeech = async () => {
     if (!text.trim()) {
@@ -154,6 +185,42 @@ export default function Home() {
 
         <div className="grid grid-cols-1 grid-cols-3">
           <div className="form-group">
+            <label htmlFor="language" className="label">
+              Language:
+            </label>
+            <select
+              id="language"
+              value={languageFilter}
+              onChange={(e) => setLanguageFilter(e.target.value)}
+              className="select"
+              onFocus={loadVoices}
+            >
+              <option value="">All</option>
+              {languages.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="country" className="label">
+              Country:
+            </label>
+            <select
+              id="country"
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="select"
+              onFocus={loadVoices}
+            >
+              <option value="">All</option>
+              {countries.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
             <label htmlFor="voice" className="label">
               Voice:
             </label>
@@ -164,7 +231,7 @@ export default function Home() {
               className="select"
               onFocus={loadVoices}
             >
-              {voices.map((voice) => (
+              {filteredVoices.map((voice) => (
                 <option key={voice.ShortName} value={voice.ShortName}>
                   {voice.FriendlyName} ({voice.Locale})
                 </option>
