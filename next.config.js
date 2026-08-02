@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['@andresaya/edge-tts']
+    useTypeScriptCli: true,
   },
+  serverExternalPackages: ['@andresaya/edge-tts'],
   webpack: (config) => {
     config.externals.push({
       '@andresaya/edge-tts': 'commonjs @andresaya/edge-tts'
